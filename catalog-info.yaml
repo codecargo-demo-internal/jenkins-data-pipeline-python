@@ -1,0 +1,139 @@
+apiVersion: backstage.io/v1alpha1
+kind: Domain
+metadata:
+  name: data-engineering
+  description: Ingestion, ETL, and analytics data products for RedKnot Enterprises.
+  tags:
+    - data
+    - analytics
+spec:
+  owner: group:team-data-engineering
+---
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: data-platform
+  description: Batch ingestion and ETL pipelines feeding the analytics warehouse.
+  annotations:
+    backstage.io/source-location: url:https://github.com/codecargo-demo-internal/jenkins-data-pipeline-python/
+  tags:
+    - etl
+    - python
+spec:
+  owner: group:team-data-engineering
+  domain: data-engineering
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: data-pipeline
+  description: Python ingestion + transformation pipeline (boto3/pandas) for the data lake and warehouse.
+  annotations:
+    github.com/project-slug: codecargo-demo-internal/jenkins-data-pipeline-python
+    backstage.io/source-location: url:https://github.com/codecargo-demo-internal/jenkins-data-pipeline-python/
+    backstage.io/techdocs-ref: dir:.
+    jenkins.io/job-full-name: Data-Engineering/data-pipeline-ingest
+  tags:
+    - python
+    - etl
+    - pandas
+    - boto3
+  links:
+    - url: https://github.com/codecargo-demo-internal/jenkins-data-pipeline-python/
+      title: Source
+      icon: github
+spec:
+  type: service
+  lifecycle: production
+  owner: group:team-data-engineering
+  system: data-platform
+  subcomponentOf: data-platform-orchestrator
+  consumesApis:
+    - user-management-api
+  dependsOn:
+    - resource:raw-data-lake
+    - resource:analytics-warehouse
+    - resource:ingest-queue
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: data-platform-orchestrator
+  description: "[demo/invented] Logical orchestrator grouping the scheduled ETL jobs."
+  annotations:
+    backstage.io/source-location: url:https://github.com/codecargo-demo-internal/jenkins-data-pipeline-python/
+  tags:
+    - orchestration
+    - invented
+spec:
+  type: service
+  lifecycle: production
+  owner: group:team-data-engineering
+  system: data-platform
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: raw-data-lake
+  description: "[demo/invented] S3 bucket holding raw ingested records before transformation."
+  tags:
+    - s3
+    - data-lake
+    - invented
+spec:
+  type: s3-bucket
+  owner: group:team-data-engineering
+  system: data-platform
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: analytics-warehouse
+  description: "[demo/invented] Analytical warehouse storing cleaned, aggregated records."
+  tags:
+    - warehouse
+    - database
+    - invented
+spec:
+  type: database
+  owner: group:team-data-engineering
+  system: data-platform
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: ingest-queue
+  description: "[demo/invented] Queue buffering inbound records for the ingestion workers."
+  tags:
+    - queue
+    - invented
+spec:
+  type: queue
+  owner: group:team-data-engineering
+  system: data-platform
+---
+apiVersion: backstage.io/v1alpha1
+kind: Group
+metadata:
+  name: team-data-engineering
+  description: Builds and operates RedKnot data pipelines and analytics.
+spec:
+  type: team
+  profile:
+    displayName: Data Engineering Team
+    email: data-eng@redknot-enterprises.com
+  parent: engineering
+  children: []
+  members:
+    - rkapoor
+---
+apiVersion: backstage.io/v1alpha1
+kind: User
+metadata:
+  name: rkapoor
+spec:
+  profile:
+    displayName: Rohan Kapoor
+    email: rohan.kapoor@redknot-enterprises.com
+  memberOf:
+    - team-data-engineering
